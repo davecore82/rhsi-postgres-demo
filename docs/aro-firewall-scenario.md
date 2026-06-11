@@ -15,20 +15,6 @@ Azure Red Hat OpenShift (ARO) cluster with:
 ARO Pod → EgressIP → UDR → Firewall NVA (egress) → Internet → External DB
 ```
 
-**Requirements:**
-1. Allocate static EgressIP in Azure
-2. Configure ARO to use EgressIP for specific pods
-3. Add firewall rule on NVA: `allow <EgressIP> → <Database-IP>:5432`
-4. Configure firewall rule on database side: `allow from <EgressIP>`
-5. Coordinate between cluster admin, network admin, and database admin
-
-**Problems:**
-- Complex multi-team coordination
-- Firewall rules need maintenance
-- IP-based security (less secure than certificates)
-- Egress traffic charges in Azure
-- UDR adds latency
-
 ### RHSI Approach (Reverse the Connection)
 
 ```
