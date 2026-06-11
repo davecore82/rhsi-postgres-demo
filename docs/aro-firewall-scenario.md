@@ -296,35 +296,6 @@ spec:
       port: 5432
 ```
 
-## Cost Considerations
-
-### Azure Cost Impact
-
-**Traditional EgressIP:**
-- Egress bandwidth charges (every query is outbound → inbound)
-- Public IP allocation costs
-- NVA processing for every database query
-
-**RHSI:**
-- Ingress bandwidth typically free in Azure
-- Tunnel setup uses ingress (one-time, then persistent)
-- Data flow through existing tunnel (minimal additional egress)
-- No public IP needed for database access
-
-### Operational Cost
-
-**Traditional:**
-- Network admin time for firewall rules
-- Cluster admin time for EgressIP setup
-- Change management for firewall updates
-- Troubleshooting IP-based connectivity
-
-**RHSI:**
-- Initial operator installation (one-time)
-- Per-service listener/connector setup
-- Minimal ongoing maintenance
-- Status monitoring via skupper CLI
-
 ## Troubleshooting
 
 ### If External Host Can't Reach ARO Route
