@@ -3,88 +3,94 @@
 ## Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ OpenShift Cluster                                                │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │ Namespace: rhsi-v2-demo                                 │    │
-│  │                                                         │    │
-│  │  ┌──────────────────┐         ┌──────────────────┐    │    │
-│  │  │ postgres-client  │────────▶│ Service: postgres│    │    │
-│  │  │ (Test Pod)       │         │ (ClusterIP)      │    │    │
-│  │  │                  │         │ Port: 5432       │    │    │
-│  │  │ Connects to:     │         └─────────┬────────┘    │    │
-│  │  │ postgres:5432    │                   │             │    │
-│  │  └──────────────────┘                   │             │    │
-│  │                                          │             │    │
-│  │                                          ▼             │    │
-│  │                            ┌──────────────────────┐   │    │
-│  │                            │ Endpoints: postgres  │   │    │
-│  │                            │ <pod-ip>:1024       │   │    │
-│  │                            └──────────┬───────────┘   │    │
-│  │                                       │               │    │
-│  │                                       ▼               │    │
-│  │              ┌─────────────────────────────────────┐ │    │
-│  │              │ skupper-router-<hash>               │ │    │
-│  │              │ (2 containers: router + controller) │ │    │
-│  │              │                                      │ │    │
-│  │              │ Listener: routing-key=postgres      │ │    │
-│  │              │ Port 1024 → AMQP tunnel            │ │    │
-│  │              └──────────────────┬──────────────────┘ │    │
-│  └──────────────────────────────────┼────────────────────┘    │
-│                                     │                          │
-│  ┌──────────────────────────────────┼────────────────────┐    │
-│  │ OpenShift Routes (Ingress)       │                    │    │
-│  │                                  │                    │    │
-│  │  ▪ skupper-router-inter-router-rhsi-v2-demo          │    │
-│  │    .apps.<cluster-domain>                             │    │
-│  │    (Port 443 → 55671, TLS passthrough)               │    │
-│  │                                                       │    │
-│  │  ▪ skupper-router-edge-rhsi-v2-demo                  │    │
-│  │    .apps.<cluster-domain>                             │    │
-│  │    (Port 443 → 45671, TLS passthrough)               │    │
-│  └────────────────────────┬──────────────────────────────┘    │
-└───────────────────────────┼───────────────────────────────────┘
-                            │
-                            │ Internet
-                            │ (TLS/AMQP connection initiated
-                            │  FROM external host TO OpenShift)
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ External Linux Host (Raspberry Pi / VM / etc.)                  │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │ Podman Containers (rootless)                            │    │
-│  │                                                         │    │
-│  │  ┌──────────────────────────────────────────────┐     │    │
-│  │  │ skupper-router                               │     │    │
-│  │  │ - Connects TO OpenShift route (outbound)     │     │    │
-│  │  │ - Connector: routing-key=postgres            │     │    │
-│  │  │ - Forwards to 127.0.0.1:5432                │     │    │
-│  │  └──────────────────────────────────────────────┘     │    │
-│  │                                                         │    │
-│  │  ┌──────────────────────────────────────────────┐     │    │
-│  │  │ skupper-controller-podman                    │     │    │
-│  │  │ - Manages podman site lifecycle              │     │    │
-│  │  └──────────────────────────────────────────────┘     │    │
-│  └────────────────────────────────────────────────────────┘    │
-│                                                                  │
-│                          │                                      │
-│                          ▼                                      │
-│  ┌────────────────────────────────────────────────────────┐    │
-│  │ PostgreSQL 15 (Native Process)                          │    │
-│  │                                                         │    │
-│  │ Listening: 127.0.0.1:5432                              │    │
-│  │ Database: demodb                                       │    │
-│  │ User: demouser / Password: demopass                    │    │
-│  │                                                         │    │
-│  │ demo_data table:                                       │    │
-│  │   1 | Hello from Raspberry Pi!                         │    │
-│  │   2 | Skupper makes networking easy                    │    │
-│  │   3 | No egress IP needed!                             │    │
-│  └────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ OpenShift Cluster                                            │
+│                                                              │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │ Namespace: rhsi-v2-demo                            │     │
+│  │                                                    │     │
+│  │  ┌──────────────┐      ┌────────────────┐        │     │
+│  │  │ postgres-    │─────>│ Service:       │        │     │
+│  │  │ client       │      │ postgres       │        │     │
+│  │  │ (Test Pod)   │      │ (ClusterIP)    │        │     │
+│  │  │              │      │ Port: 5432     │        │     │
+│  │  │ Connects to: │      └───────┬────────┘        │     │
+│  │  │ postgres:5432│              │                 │     │
+│  │  └──────────────┘              │                 │     │
+│  │                                │                 │     │
+│  │                                ▼                 │     │
+│  │                    ┌──────────────────┐          │     │
+│  │                    │ Endpoints:       │          │     │
+│  │                    │ postgres         │          │     │
+│  │                    │ <pod-ip>:1024    │          │     │
+│  │                    └────────┬─────────┘          │     │
+│  │                             │                    │     │
+│  │                             ▼                    │     │
+│  │          ┌────────────────────────────────┐     │     │
+│  │          │ skupper-router-<hash>          │     │     │
+│  │          │ (2 containers)                 │     │     │
+│  │          │ - router                       │     │     │
+│  │          │ - controller                   │     │     │
+│  │          │                                │     │     │
+│  │          │ Listener:                      │     │     │
+│  │          │   routing-key=postgres         │     │     │
+│  │          │   Port 1024 → AMQP tunnel      │     │     │
+│  │          └──────────────┬─────────────────┘     │     │
+│  └─────────────────────────┼───────────────────────┘     │
+│                            │                             │
+│  ┌─────────────────────────┼───────────────────────┐     │
+│  │ OpenShift Routes        │                       │     │
+│  │ (Ingress)               │                       │     │
+│  │                                                 │     │
+│  │  • skupper-router-inter-router-rhsi-v2-demo   │     │
+│  │    .apps.<cluster-domain>                      │     │
+│  │    (Port 443 → 55671, TLS passthrough)         │     │
+│  │                                                 │     │
+│  │  • skupper-router-edge-rhsi-v2-demo            │     │
+│  │    .apps.<cluster-domain>                      │     │
+│  │    (Port 443 → 45671, TLS passthrough)         │     │
+│  └──────────────────┬──────────────────────────────┘     │
+└─────────────────────┼────────────────────────────────────┘
+                      │
+                      │ Internet
+                      │ (TLS/AMQP connection initiated
+                      │  FROM external host TO OpenShift)
+                      │
+                      ▼
+┌──────────────────────────────────────────────────────────────┐
+│ External Linux Host (Raspberry Pi / VM / etc.)               │
+│                                                              │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │ Podman Containers (rootless)                       │     │
+│  │                                                    │     │
+│  │  ┌──────────────────────────────────────┐         │     │
+│  │  │ skupper-router                       │         │     │
+│  │  │ - Connects TO OpenShift route        │         │     │
+│  │  │ - Connector: routing-key=postgres    │         │     │
+│  │  │ - Forwards to 127.0.0.1:5432         │         │     │
+│  │  └──────────────────────────────────────┘         │     │
+│  │                                                    │     │
+│  │  ┌──────────────────────────────────────┐         │     │
+│  │  │ skupper-controller-podman            │         │     │
+│  │  │ - Manages podman site lifecycle      │         │     │
+│  │  └──────────────────────────────────────┘         │     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                              │
+│                      │                                       │
+│                      ▼                                       │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │ PostgreSQL 15 (Native Process)                     │     │
+│  │                                                    │     │
+│  │ Listening: 127.0.0.1:5432                          │     │
+│  │ Database: demodb                                   │     │
+│  │ User: demouser / Password: demopass                │     │
+│  │                                                    │     │
+│  │ demo_data table:                                   │     │
+│  │   1 | Hello from Raspberry Pi!                    │     │
+│  │   2 | Skupper makes networking easy               │     │
+│  │   3 | No egress IP needed!                        │     │
+│  └────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Data Flow (PostgreSQL Query)
