@@ -4,7 +4,7 @@ Demonstrates Red Hat Service Interconnect (RHSI) v2 connecting an OpenShift clus
 
 ## Overview
 
-This demo implements Michaela Lang's recommended approach for service connectivity as an alternative to traditional Egress IP solutions. Instead of relying on source IP-based firewall rules, RHSI establishes secure, certificate-based connections where the external service connects into the cluster.
+This demo implements a recommended approach for service connectivity as an alternative to traditional Egress IP solutions. Instead of relying on source IP-based firewall rules, RHSI establishes secure, certificate-based connections where the external service connects into the cluster.
 
 ## Architecture
 
@@ -312,12 +312,10 @@ loginctl enable-linger $USER
 
 - [Red Hat Service Interconnect Documentation](https://docs.redhat.com/en/documentation/red_hat_service_interconnect/)
 - [Skupper Project](https://skupper.io/)
-- [Michaela Lang's RHSI Examples](https://github.com/michaelalang/rhsi-hackfest)
 - [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/)
 
 ## Credits
 
-Demo architecture based on recommendations from Michaela Lang regarding RHSI as an alternative to Egress IP for secure service connectivity.
 
 ## License
 
