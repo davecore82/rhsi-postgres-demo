@@ -291,7 +291,6 @@ oc logs -l application=skupper-router -n rhsi-v2-demo
 RHSI v1.9.x has documented issues with TCP services between Kubernetes and Podman:
 - L4 flow creation failures with "legacy encap" mode
 - Connection reset errors with TCP adaptor
-- Related JIRA issues: DISPATCH-1931, DISPATCH-2036, DISPATCH-2073
 
 **Solution:** Upgrade to RHSI v2.0+ which includes a completely rewritten TCP adaptation layer.
 
@@ -313,17 +312,6 @@ loginctl enable-linger $USER
 - [Red Hat Service Interconnect Product Page](https://developers.redhat.com/products/service-interconnect/overview)
 - [Skupper Project](https://skupper.io/)
 - [Skupper Router GitHub](https://github.com/skupperproject/skupper-router)
-
-## Technical Notes
-
-### Router Implementation
-
-RHSI uses skupper-router, a maintained fork of the Apache Qpid Dispatch Router. While the original Apache Qpid Dispatch project has been retired, skupper-router continues active development under the Skupper project and is commercially supported by Red Hat as part of Service Interconnect.
-
-The skupper-router implementation has diverged significantly from the original Qpid Dispatch with numerous improvements, including a completely rewritten TCP adaptation layer in v2.x that resolves issues present in earlier versions.
-
-## Credits
-
 
 ## License
 
