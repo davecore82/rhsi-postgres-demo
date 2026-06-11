@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ OpenShift Cluster (apps.prime.davecore.xyz)                     │
+│ OpenShift Cluster                                                │
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────┐    │
 │  │ Namespace: rhsi-v2-demo                                 │    │
@@ -12,25 +12,24 @@
 │  │  ┌──────────────────┐         ┌──────────────────┐    │    │
 │  │  │ postgres-client  │────────▶│ Service: postgres│    │    │
 │  │  │ (Test Pod)       │         │ (ClusterIP)      │    │    │
-│  │  │                  │         │ 172.30.82.114    │    │    │
-│  │  │ Connects to:     │         │ Port: 5432       │    │    │
-│  │  │ postgres:5432    │         └─────────┬────────┘    │    │
+│  │  │                  │         │ Port: 5432       │    │    │
+│  │  │ Connects to:     │         └─────────┬────────┘    │    │
+│  │  │ postgres:5432    │                   │             │    │
 │  │  └──────────────────┘                   │             │    │
 │  │                                          │             │    │
 │  │                                          ▼             │    │
 │  │                            ┌──────────────────────┐   │    │
 │  │                            │ Endpoints: postgres  │   │    │
-│  │                            │ 10.128.0.110:1024   │   │    │
+│  │                            │ <pod-ip>:1024       │   │    │
 │  │                            └──────────┬───────────┘   │    │
 │  │                                       │               │    │
 │  │                                       ▼               │    │
 │  │              ┌─────────────────────────────────────┐ │    │
-│  │              │ skupper-router-7667dbb47f-5v5gq     │ │    │
+│  │              │ skupper-router-<hash>               │ │    │
 │  │              │ (2 containers: router + controller) │ │    │
 │  │              │                                      │ │    │
-│  │              │ Pod IP: 10.128.0.110                │ │    │
 │  │              │ Listener: routing-key=postgres      │ │    │
-│  │              │ Port 1024 → AMQP tunnel to Pi      │ │    │
+│  │              │ Port 1024 → AMQP tunnel            │ │    │
 │  │              └──────────────────┬──────────────────┘ │    │
 │  └──────────────────────────────────┼────────────────────┘    │
 │                                     │                          │
@@ -38,41 +37,36 @@
 │  │ OpenShift Routes (Ingress)       │                    │    │
 │  │                                  │                    │    │
 │  │  ▪ skupper-router-inter-router-rhsi-v2-demo          │    │
-│  │    .apps.prime.davecore.xyz                           │    │
+│  │    .apps.<cluster-domain>                             │    │
 │  │    (Port 443 → 55671, TLS passthrough)               │    │
 │  │                                                       │    │
 │  │  ▪ skupper-router-edge-rhsi-v2-demo                  │    │
-│  │    .apps.prime.davecore.xyz                           │    │
+│  │    .apps.<cluster-domain>                             │    │
 │  │    (Port 443 → 45671, TLS passthrough)               │    │
 │  └────────────────────────┬──────────────────────────────┘    │
 └───────────────────────────┼───────────────────────────────────┘
                             │
                             │ Internet
                             │ (TLS/AMQP connection initiated
-                            │  FROM Pi TO OpenShift)
+                            │  FROM external host TO OpenShift)
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ Raspberry Pi (192.168.4.48)                                     │
+│ External Linux Host (Raspberry Pi / VM / etc.)                  │
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────┐    │
 │  │ Podman Containers (rootless)                            │    │
 │  │                                                         │    │
 │  │  ┌──────────────────────────────────────────────┐     │    │
-│  │  │ skupper-router (quay.io/..:2.7.5)            │     │    │
+│  │  │ skupper-router                               │     │    │
 │  │  │ - Connects TO OpenShift route (outbound)     │     │    │
 │  │  │ - Connector: routing-key=postgres            │     │    │
 │  │  │ - Forwards to 127.0.0.1:5432                │     │    │
 │  │  └──────────────────────────────────────────────┘     │    │
 │  │                                                         │    │
 │  │  ┌──────────────────────────────────────────────┐     │    │
-│  │  │ skupper-controller-podman (quay.io/..:1.9.1) │     │    │
+│  │  │ skupper-controller-podman                    │     │    │
 │  │  │ - Manages podman site lifecycle              │     │    │
-│  │  └──────────────────────────────────────────────┘     │    │
-│  │                                                         │    │
-│  │  ┌──────────────────────────────────────────────┐     │    │
-│  │  │ default-skupper-router (quay.io/..:3.5.1)    │     │    │
-│  │  │ - Additional router instance                 │     │    │
 │  │  └──────────────────────────────────────────────┘     │    │
 │  └────────────────────────────────────────────────────────┘    │
 │                                                                  │
@@ -81,7 +75,6 @@
 │  ┌────────────────────────────────────────────────────────┐    │
 │  │ PostgreSQL 15 (Native Process)                          │    │
 │  │                                                         │    │
-│  │ PID: 58888                                             │    │
 │  │ Listening: 127.0.0.1:5432                              │    │
 │  │ Database: demodb                                       │    │
 │  │ User: demouser / Password: demopass                    │    │
@@ -98,31 +91,31 @@
 
 1. **Application Request** (OpenShift):
    - Pod `postgres-client` runs: `psql -h postgres -p 5432`
-   - DNS resolves `postgres` → Service IP `172.30.82.114`
+   - DNS resolves `postgres` → Service ClusterIP
 
 2. **Service Routing** (OpenShift):
-   - Service `postgres` routes to endpoint `10.128.0.110:1024`
-   - Endpoint is the skupper-router pod
+   - Service `postgres` routes to skupper-router pod endpoint (port 1024)
+   - Endpoint is dynamically managed by RHSI
 
 3. **RHSI Routing Layer** (OpenShift):
    - skupper-router receives TCP on port 1024
    - Matches routing-key `postgres` (listener configuration)
    - Encapsulates TCP over AMQP protocol
-   - Sends through established AMQP link to Pi
+   - Sends through established AMQP link to external host
 
 4. **AMQP Link** (Internet):
    - TLS-encrypted AMQP connection
-   - Initiated FROM Pi TO OpenShift (inbound to cluster)
-   - Uses OpenShift route: skupper-router-inter-router-*.apps.prime.davecore.xyz
+   - Initiated FROM external host TO OpenShift (inbound to cluster)
+   - Uses OpenShift route: `skupper-router-inter-router-rhsi-v2-demo.apps.<cluster-domain>`
    - Certificate-based authentication (not IP-based)
 
-5. **RHSI Decapsulation** (Raspberry Pi):
+5. **RHSI Decapsulation** (External Host):
    - skupper-router container receives AMQP message
    - Matches routing-key `postgres` (connector configuration)
    - Decapsulates TCP from AMQP
    - Forwards to configured host: `127.0.0.1:5432`
 
-6. **PostgreSQL Response** (Raspberry Pi):
+6. **PostgreSQL Response** (External Host):
    - PostgreSQL receives query on localhost:5432
    - Authenticates user `demouser` (scram-sha-256)
    - Executes query on `demodb.demo_data`
@@ -130,30 +123,27 @@
 
 7. **Return Path**:
    - Response flows back through same AMQP tunnel
-   - skupper-router (Pi) → AMQP → skupper-router (OCP)
+   - skupper-router (external) → AMQP → skupper-router (OCP)
    - skupper-router (OCP) → TCP:1024 → Service → Pod
    - Application receives PostgreSQL result set
 
-## Key Components Status
+## Key Components
 
 ### OpenShift
-```
-Operator: skupper-operator.v2.1.4-rh-3 (Red Hat Service Interconnect)
-Site: ocp-v2-site (Ready)
-Router Pod: skupper-router-7667dbb47f-5v5gq (2/2 Running)
-Service: postgres (ClusterIP 172.30.82.114:5432)
-Listener: postgres (routing-key=postgres, Ready, matching-connector=true)
-```
+- **Operator**: Red Hat Service Interconnect v2.1+ (skupper-operator)
+- **Site**: RHSI site with link access enabled
+- **Router Pod**: skupper-router (2 containers: router + controller)
+- **Service**: `postgres` (ClusterIP, port 5432)
+- **Listener**: postgres (routing-key=postgres, points to service)
+- **Routes**: Inter-router and edge routes for external connectivity
 
-### Raspberry Pi
-```
-Skupper CLI: v2.2.1
-Site: pi-v2-site (Ready)
-Containers: 3 running (skupper-router, controller, default-router)
-PostgreSQL: PID 58888 (listening 127.0.0.1:5432)
-Connector: postgres (routing-key=postgres, host=127.0.0.1:5432)
-Link Status: Pending (but functional - services working)
-```
+### External Linux Host
+- **Skupper CLI**: v2.2+ compatible with RHSI v2
+- **Site**: RHSI site in podman mode
+- **Containers**: skupper-router, skupper-controller-podman
+- **PostgreSQL**: Native process listening on 127.0.0.1:5432
+- **Connector**: postgres (routing-key=postgres, host=127.0.0.1:5432)
+- **Link**: TLS connection TO OpenShift cluster
 
 ## Security Model
 
@@ -165,22 +155,47 @@ Link Status: Pending (but functional - services working)
 
 **RHSI Approach:**
 - PostgreSQL NOT exposed to internet
-- Pi initiates connection INTO cluster (inbound only)
+- External host initiates connection INTO cluster (inbound only)
 - Security via TLS certificate validation
 - OpenShift NetworkPolicy controls which ServiceAccounts can access `postgres` service
 - No firewall configuration required
 - No egress IP allocation required
 
+## How This Solves the EgressIP Problem
+
+**The Problem**: Applications need to connect to external databases that use IP-based firewall rules. Traditional solutions require:
+1. Allocating static EgressIP addresses
+2. Configuring firewall rules on the database side
+3. Cluster admin permissions
+4. Network admin coordination
+
+**The RHSI Solution**: 
+1. External database host connects INTO the cluster (no egress needed)
+2. Certificate-based authentication (no IP whitelisting)
+3. Application uses normal service name (`postgres:5432`)
+4. Works without cluster admin or network admin involvement
+5. More secure (certificate validation vs IP filtering)
+
+## Routing Key Matching
+
+The routing-key is how RHSI connects listeners to connectors across sites:
+
+- **Listener** (OpenShift): Creates a Kubernetes Service with routing-key `postgres`
+- **Connector** (External Host): Exposes local PostgreSQL with routing-key `postgres`
+- **Match**: When keys match, traffic flows bidirectionally through AMQP tunnel
+
+This is similar to pub/sub messaging - the routing-key is the topic name.
+
 ## Verified Working
 
-✓ PostgreSQL running natively on Pi (not containerized)
-✓ Skupper v2 routers connected via AMQP
-✓ Routing-key matching (connector ↔ listener)
-✓ TCP adaptation working (v2.x fixed v1.9.x bugs)
-✓ Application can query database through service name
-✓ No egress IP configured
-✓ No firewall rules required
-✓ Connection initiated from Pi TO cluster (inbound)
+✓ PostgreSQL running natively on external host (not containerized)  
+✓ Skupper v2 routers connected via AMQP  
+✓ Routing-key matching (connector ↔ listener)  
+✓ TCP adaptation working (v2.x fixed v1.9.x bugs)  
+✓ Application can query database through service name  
+✓ No egress IP configured  
+✓ No firewall rules required  
+✓ Connection initiated from external host TO cluster (inbound)
 
 ## Test Results
 
@@ -196,5 +211,14 @@ PGPASSWORD=demopass psql -h postgres -p 5432 -U demouser -d demodb -c "SELECT * 
   3 | No egress IP needed!          | 2026-06-11 14:55:24.10867
 (3 rows)
 
-✓ SUCCESS! Connected to PostgreSQL on Raspberry Pi via Skupper!
+✓ SUCCESS! Connected to PostgreSQL via RHSI!
 ```
+
+## Production Considerations
+
+1. **Certificates**: RHSI auto-generates certificates, but production should use proper PKI
+2. **Passwords**: Replace demo credentials with secrets management (Vault, etc.)
+3. **PostgreSQL TLS**: Enable SSL/TLS on PostgreSQL itself
+4. **NetworkPolicies**: Restrict which pods can access the postgres service
+5. **Monitoring**: Enable RHSI metrics for observability
+6. **High Availability**: Deploy multiple router replicas for resilience
