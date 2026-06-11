@@ -310,8 +310,17 @@ loginctl enable-linger $USER
 ## References
 
 - [Red Hat Service Interconnect Documentation](https://docs.redhat.com/en/documentation/red_hat_service_interconnect/)
+- [Red Hat Service Interconnect Product Page](https://developers.redhat.com/products/service-interconnect/overview)
 - [Skupper Project](https://skupper.io/)
-- [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/)
+- [Skupper Router GitHub](https://github.com/skupperproject/skupper-router)
+
+## Technical Notes
+
+### Router Implementation
+
+RHSI uses skupper-router, a maintained fork of the Apache Qpid Dispatch Router. While the original Apache Qpid Dispatch project has been retired, skupper-router continues active development under the Skupper project and is commercially supported by Red Hat as part of Service Interconnect.
+
+The skupper-router implementation has diverged significantly from the original Qpid Dispatch with numerous improvements, including a completely rewritten TCP adaptation layer in v2.x that resolves issues present in earlier versions.
 
 ## Credits
 
