@@ -12,7 +12,6 @@ This demo implements an approach for service connectivity as an alternative to t
 ```
 App → EgressIP → Firewall → External Service
 ```
-Issues: IP stability, failover complexity, firewall dependency
 
 **RHSI Approach:**
 ```
