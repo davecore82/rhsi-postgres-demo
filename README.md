@@ -149,13 +149,13 @@ skupper version
 **On OpenShift:**
 ```bash
 # Create namespace
-oc new-project rhsi-demo
+oc new-project rhsi-v2-demo
 
 # Create RHSI site
-skupper site create ocp-site --enable-link-access -n rhsi-demo
+skupper site create ocp-site --enable-link-access -n rhsi-v2-demo
 
 # Verify
-skupper site status -n rhsi-demo
+skupper site status -n rhsi-v2-demo
 ```
 
 **On Raspberry Pi:**
@@ -177,7 +177,7 @@ skupper site status --platform podman
 
 **On OpenShift (create token):**
 ```bash
-skupper token issue ~/rhsi-token.yaml -n rhsi-demo
+skupper token issue ~/rhsi-token.yaml -n rhsi-v2-demo
 ```
 
 **Transfer token to Raspberry Pi, then:**
@@ -208,22 +208,22 @@ skupper system reload --platform podman
 ```bash
 skupper listener create postgres 5432 \
   --routing-key postgres \
-  -n rhsi-demo
+  -n rhsi-v2-demo
 
 # Verify service was created
-oc get svc postgres -n rhsi-demo
+oc get svc postgres -n rhsi-v2-demo
 ```
 
 ### 7. Deploy Test Application
 
 ```bash
-oc apply -f openshift/postgres-client-pod.yaml -n rhsi-demo
+oc apply -f openshift/postgres-client-pod.yaml -n rhsi-v2-demo
 ```
 
 ### 8. Verify Connection
 
 ```bash
-oc logs postgres-client -n rhsi-demo
+oc logs postgres-client -n rhsi-v2-demo
 ```
 
 Expected output:
@@ -254,7 +254,7 @@ oc patch subscription.operators.coreos.com skupper-operator \
 
 The link may show as "Pending" on the Podman side but services can still work. Verify by checking service status:
 ```bash
-skupper listener status -n rhsi-demo
+skupper listener status -n rhsi-v2-demo
 skupper connector status --platform podman
 ```
 
@@ -271,8 +271,8 @@ podman ps | grep skupper
 PGPASSWORD=demopass psql -h 127.0.0.1 -U demouser -d demodb -c "SELECT 1;"
 
 # On OpenShift
-oc get endpoints postgres -n rhsi-demo
-oc logs -l application=skupper-router -n rhsi-demo
+oc get endpoints postgres -n rhsi-v2-demo
+oc logs -l application=skupper-router -n rhsi-v2-demo
 ```
 
 ## Production Considerations

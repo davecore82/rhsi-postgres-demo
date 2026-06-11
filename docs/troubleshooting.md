@@ -48,11 +48,11 @@ oc get csv -n rhsi-system | grep skupper
 **Diagnosis:**
 ```bash
 # Check link status on both sides
-skupper link status -n rhsi-demo
+skupper link status -n rhsi-v2-demo
 skupper link status --platform podman
 
 # Check service connectivity
-skupper listener status -n rhsi-demo
+skupper listener status -n rhsi-v2-demo
 skupper connector status --platform podman
 ```
 
@@ -130,13 +130,13 @@ sudo systemctl restart postgresql
 **Diagnosis:**
 ```bash
 # Check service
-oc get svc postgres -n rhsi-demo
+oc get svc postgres -n rhsi-v2-demo
 
 # Check endpoints
-oc get endpoints postgres -n rhsi-demo -o yaml
+oc get endpoints postgres -n rhsi-v2-demo -o yaml
 
 # Check skupper listener
-skupper listener status -n rhsi-demo -v
+skupper listener status -n rhsi-v2-demo -v
 ```
 
 **Solution:**
@@ -177,7 +177,7 @@ Connection failed: amqp:connection:framing-error SSL Failure: error:0A000126:SSL
 **Diagnosis:**
 ```bash
 # Check router logs on OpenShift
-oc logs -l application=skupper-router -c router -n rhsi-demo | grep -i ssl
+oc logs -l application=skupper-router -c router -n rhsi-v2-demo | grep -i ssl
 
 # Check router logs on Pi
 podman logs skupper-router | grep -i ssl
@@ -199,11 +199,11 @@ podman logs skupper-router | grep -i ssl
 
 ```bash
 # OpenShift side
-skupper site status -n rhsi-demo
-skupper link status -n rhsi-demo
-skupper listener status -n rhsi-demo
-oc get pods -n rhsi-demo
-oc get svc -n rhsi-demo
+skupper site status -n rhsi-v2-demo
+skupper link status -n rhsi-v2-demo
+skupper listener status -n rhsi-v2-demo
+oc get pods -n rhsi-v2-demo
+oc get svc -n rhsi-v2-demo
 
 # Raspberry Pi side
 skupper site status --platform podman
@@ -216,7 +216,7 @@ podman ps
 
 ```bash
 # From Pi, test connection to OpenShift route
-curl -k https://skupper-router-inter-router-rhsi-demo.apps.your-cluster.com
+curl -k https://skupper-router-inter-router-rhsi-v2-demo.apps.your-cluster.com
 
 # From OpenShift pod, test DNS resolution
 oc run test --image=nicolaka/netshoot --rm -it -- nslookup postgres
@@ -226,7 +226,7 @@ oc run test --image=nicolaka/netshoot --rm -it -- nslookup postgres
 
 ```bash
 # OpenShift
-oc logs -l application=skupper-router -c router -n rhsi-demo --tail=100
+oc logs -l application=skupper-router -c router -n rhsi-v2-demo --tail=100
 
 # Raspberry Pi
 podman logs skupper-router --tail=100
@@ -239,7 +239,7 @@ podman logs skupper-router --tail=100
 PGPASSWORD=demopass psql -h 127.0.0.1 -U demouser -d demodb -c "SELECT version();"
 
 # Through skupper from OpenShift
-oc exec -n rhsi-demo postgres-client -- \
+oc exec -n rhsi-v2-demo postgres-client -- \
   bash -c 'PGPASSWORD=demopass psql -h postgres -p 5432 -U demouser -d demodb -c "SELECT version();"'
 ```
 
