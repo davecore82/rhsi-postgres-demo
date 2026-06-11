@@ -4,17 +4,17 @@ Demonstrates Red Hat Service Interconnect (RHSI) v2 connecting an OpenShift clus
 
 ## Overview
 
-This demo implements a recommended approach for service connectivity as an alternative to traditional Egress IP solutions. Instead of relying on source IP-based firewall rules, RHSI establishes secure, certificate-based connections where the external service connects into the cluster.
+This demo implements an approach for service connectivity as an alternative to traditional Egress IP solutions. Instead of relying on source IP-based firewall rules, RHSI establishes secure, certificate-based connections where the external service connects into the cluster.
 
 ## Architecture
 
-**Traditional Egress (problematic):**
+**Traditional Egress:**
 ```
 App → EgressIP → Firewall → External Service
 ```
 Issues: IP stability, failover complexity, firewall dependency
 
-**RHSI Approach (recommended):**
+**RHSI Approach:**
 ```
 1. External Service (Pi) → connects INTO cluster → RHSI Router (via TLS)
 2. App → connects to local service → RHSI Router → Pi
