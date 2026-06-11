@@ -1,0 +1,10 @@
+*.yaml.bak
+*-token.yaml
+*.token
+.DS_Store
+*.swp
+*.swo
+*~
+.env
+.vscode/
+.idea/
