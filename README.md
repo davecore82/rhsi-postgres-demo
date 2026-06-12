@@ -48,38 +48,9 @@ Security via:
 
 ### 1. Install RHSI Operator 2.1.4-rh-3 in OpenShift
 
-Install the Red Hat Service Interconnect Operator from the OperatorHub:
-
-```bash
-# Option 1: Via OpenShift Web Console
-# Navigate to: Operators → OperatorHub → Search "Red Hat Service Interconnect"
-# Click Install → Select channel "stable-2.1" → Install
-
-# Option 2: Via CLI (using the provided manifest)
-oc apply -f openshift/rhsi-operator.yaml
-```
-
-Wait for the operator to be ready:
-```bash
-oc get csv -n rhsi-system | grep skupper
-# Expected: skupper-operator.v2.1.4-rh-3   Red Hat Service Interconnect   2.1.4-rh-3   Succeeded
-```
+Install the Red Hat Service Interconnect Operator from the OperatorHub.
 
 ### 2. Set Up PostgreSQL on Raspberry Pi
-
-Run the setup script on your Raspberry Pi:
-
-```bash
-# Clone this repository
-git clone https://github.com/davecore82/rhsi-postgres-demo.git
-cd rhsi-postgres-demo
-
-# Run the PostgreSQL setup script
-chmod +x scripts/setup-postgresql.sh
-./scripts/setup-postgresql.sh
-```
-
-This will install PostgreSQL 15, create the `demodb` database, `demouser` user, and populate the `demo_data` table with sample records.
 
 ### 3. Install Red Hat Service Interconnect CLI on Raspberry Pi
 
@@ -209,36 +180,5 @@ skupper listener status -n rhsi-v2-demo
 skupper connector status --platform podman
 ```
 
-### Connection Failures
-
-If the postgres-client pod shows connection failures:
-
-1. Verify PostgreSQL is running on the Pi:
-```bash
-ps aux | grep postgres | grep -v grep
-ss -tlnp | grep 5432
-```
-
-2. Check the skupper router logs:
-```bash
-podman logs default-skupper-router 2>&1 | grep -i error
-```
-
-3. Verify the connector is configured:
-```bash
-cat ~/.local/share/skupper/namespaces/default/input/resources/Connector-postgres.yaml
-```
-
-### Reboot Survival
-
-After rebooting the Raspberry Pi, verify all services restart:
-```bash
-# Check skupper router
-podman ps
-
-# Check PostgreSQL
-ps aux | grep postgres | grep -v grep
-
-# If postgres-client shows errors, wait 1-2 minutes for the link to re-establish
 oc logs postgres-client -n rhsi-v2-demo --tail=10
 ```
