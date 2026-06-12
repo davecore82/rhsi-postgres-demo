@@ -38,7 +38,8 @@ skupper-router-inter-router   skupper-router-inter-router-rhsi-v2-demo.apps.prim
 - **Skupper CLI** - v2.1.4 (Red Hat Service Interconnect)
 - **skupper-router container** - Connects TO OpenShift and forwards traffic
 - **skupper-controller-podman container** - Manages the podman site lifecycle
-- **postgres container** - PostgreSQL 15 database
+- **default-skupper-router container** - Additional router instance
+- **PostgreSQL 15** - Native system process (not containerized)
   - Listening on 127.0.0.1:5432
   - Database: demodb
   - User: demouser / Password: demopass
@@ -54,12 +55,20 @@ controller		2.1.4
 network-observer	2.1.4
 cli			2.1.4
 
-# View running containers
+# View running Skupper containers
 $ podman ps
-NAMES                      STATUS
-skupper-router             Up 15 minutes ago
-skupper-controller-podman  Up 15 minutes ago
-postgres                   Up 15 minutes ago
+CONTAINER ID  IMAGE                                    COMMAND               CREATED       STATUS
+ac73a810e970  quay.io/skupper/skupper-router:2.7.5     /home/skrouterd/b...  20 hours ago  Up 17 minutes
+de73ecf682b4  quay.io/skupper/controller-podman:1.9.1  /app/controller-p...  20 hours ago  Up 17 minutes
+9f1880cfe376  quay.io/skupper/skupper-router:3.5.1     /home/skrouterd/b...  20 hours ago  Up 17 minutes
+
+# Verify PostgreSQL is running as a native process
+$ ps aux | grep postgres | head -1
+postgres     679  0.0  2.9 221236 27716 ?  Ss  11:29  0:00 /usr/lib/postgresql/15/bin/postgres
+
+# Check what's listening on port 5432
+$ ss -tlnp | grep 5432
+tcp  LISTEN  0  244  127.0.0.1:5432  0.0.0.0:*
 ```
 
 ## How It Works
@@ -208,9 +217,9 @@ Check the status of the link using 'skupper link status link1'
 ## Verified Working
 
 ```bash
-# PostgreSQL running in Podman container on Raspberry Pi
-$ ssh pi@192.168.4.48 'podman ps | grep postgres'
-postgres   Up 20 minutes ago
+# PostgreSQL running as native process on Raspberry Pi
+$ ssh pi@192.168.4.48 'ps aux | grep "bin/postgres" | grep -v grep'
+postgres  679  0.0  2.9  /usr/lib/postgresql/15/bin/postgres -D /var/lib/postgresql/15/main
 
 # Skupper v2.1.4 routers connected via AMQP
 $ skupper version
