@@ -25,23 +25,14 @@ Security via:
 - No egress IP needed
 - No firewall holes required
 
-## Key Benefits
-
-1. **No Egress IP needed** - Application connects to local service name
-2. **No firewall configuration** - External service connects INTO the cluster (inbound)
-3. **Certificate-based authentication** - More secure than IP filtering
-4. **Resilient** - Survives pod/node failures
-5. **Fine-grained access control** - Via ServiceAccount and NetworkPolicy
-
 ## Components
 
 ### Raspberry Pi
-- PostgreSQL 15 (native, not containerized)
-- Skupper v2.2.1 in Podman mode
+- PostgreSQL (native, not containerized)
 - PostgreSQL exposed via RHSI connector
 
 ### OpenShift Cluster
-- RHSI Operator v2.1.4-rh-3 (productized Red Hat version)
+- RHSI Operator
 - RHSI site configured with link access enabled
 - PostgreSQL listener service
 
@@ -55,84 +46,9 @@ Security via:
 
 ## Installation
 
-### 1. Install RHSI Operator in OpenShift
-
-```bash
-# Create operator namespace
-oc create namespace rhsi-system
-
-# Create OperatorGroup
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: rhsi-operator-group
-  namespace: rhsi-system
-spec: {}
-EOF
-
-# Create Subscription for RHSI v2.1
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: skupper-operator
-  namespace: rhsi-system
-spec:
-  channel: stable-2.1
-  name: skupper-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
-  startingCSV: skupper-operator.v2.1.4-rh-3
-EOF
-
-# Verify installation
-oc get csv -n rhsi-system | grep skupper
-```
+### 1. Install RHSI Operator 2.1.4-rh-3 in OpenShift
 
 ### 2. Set Up PostgreSQL on Raspberry Pi
-
-```bash
-# Install PostgreSQL
-sudo apt-get update
-sudo apt-get install -y postgresql postgresql-contrib
-
-# Create demo database and user
-sudo -u postgres psql -c "CREATE DATABASE demodb;"
-sudo -u postgres psql -c "CREATE USER demouser WITH PASSWORD 'demopass';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE demodb TO demouser;"
-
-# Create demo table with sample data
-sudo -u postgres psql demodb -c "
-CREATE TABLE demo_data (
-  id SERIAL PRIMARY KEY,
-  message TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-INSERT INTO demo_data (message) VALUES
-  ('Hello from Raspberry Pi!'),
-  ('Skupper makes networking easy'),
-  ('No egress IP needed!');
-"
-
-# Grant table privileges
-sudo -u postgres psql demodb -c "
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO demouser;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO demouser;
-"
-
-# Configure PostgreSQL to listen on localhost
-sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost'/g" \
-  /etc/postgresql/15/main/postgresql.conf
-
-# Add authentication rule
-echo "host    demodb          demouser        127.0.0.1/32            scram-sha-256" | \
-  sudo tee -a /etc/postgresql/15/main/pg_hba.conf
-
-# Restart PostgreSQL
-sudo systemctl restart postgresql
-```
 
 ### 3. Install Red Hat Service Interconnect CLI on Raspberry Pi
 
@@ -140,8 +56,7 @@ sudo systemctl restart postgresql
 
 1. Go to https://access.redhat.com/downloads/
 2. Search for "Red Hat Service Interconnect"
-3. Download **Skupper CLI for Linux on ARM64** (v2.1.4 or later)
-4. Transfer the file to your Raspberry Pi
+3. Download **Skupper CLI for Linux on aarch64** (v2.1.4 or later)
 
 **Install:**
 
@@ -252,18 +167,6 @@ Connected to PostgreSQL on Raspberry Pi via Skupper!
 
 ## Troubleshooting
 
-### RHSI Version Compatibility
-
-This demo requires RHSI v2.0 or later. RHSI v1.9.x has known issues with TCP services between Kubernetes and Podman deployments.
-
-If using RHSI v1.9.x, upgrade to v2.1+ for proper TCP adaptation:
-```bash
-oc patch subscription.operators.coreos.com skupper-operator \
-  -n rhsi-system \
-  --type=merge \
-  -p '{"spec":{"channel":"stable-2.1"}}'
-```
-
 ### Link Status Shows "Pending"
 
 The link may show as "Pending" on the Podman side but services can still work. Verify by checking service status:
@@ -271,69 +174,3 @@ The link may show as "Pending" on the Podman side but services can still work. V
 skupper listener status -n rhsi-v2-demo
 skupper connector status --platform podman
 ```
-
-### Connection Refused
-
-Check that:
-1. PostgreSQL is running and listening on 127.0.0.1:5432
-2. Skupper router is running in Podman
-3. Service endpoints are correctly configured
-
-```bash
-# On Pi
-podman ps | grep skupper
-PGPASSWORD=demopass psql -h 127.0.0.1 -U demouser -d demodb -c "SELECT 1;"
-
-# On OpenShift
-oc get endpoints postgres -n rhsi-v2-demo
-oc logs -l application=skupper-router -n rhsi-v2-demo
-```
-
-## Production Considerations
-
-1. **Use strong passwords** - Replace demo credentials with secure values
-2. **Enable TLS** - Configure PostgreSQL with SSL/TLS
-3. **Network Policies** - Implement fine-grained access control via NetworkPolicies
-4. **Service Account isolation** - Use dedicated ServiceAccounts per application
-5. **Monitoring** - Enable RHSI metrics and integrate with Prometheus
-6. **High Availability** - Deploy multiple RHSI router replicas
-
-## Known Issues
-
-### RHSI v1.9.x TCP Limitations
-
-RHSI v1.9.x has documented issues with TCP services between Kubernetes and Podman:
-- L4 flow creation failures with "legacy encap" mode
-- Connection reset errors with TCP adaptor
-
-**Solution:** Upgrade to RHSI v2.0+ which includes a completely rewritten TCP adaptation layer.
-
-### Podman Socket Requirement
-
-Skupper in Podman mode requires the Podman socket to be running:
-```bash
-systemctl --user enable --now podman.socket
-```
-
-For persistence across reboots, enable lingering:
-```bash
-loginctl enable-linger $USER
-```
-
-## CLI Installation Note
-
-This demo uses the **official Red Hat Service Interconnect CLI** (v2.1.4), downloaded from the Red Hat Customer Portal. This is the supported, productized version for Red Hat Service Interconnect.
-
-**Not Recommended:** The upstream skupper.io installer (`curl -fsSL https://skupper.io/install.sh | sh`) installs the community version which, while compatible, is not officially supported by Red Hat for RHSI deployments.
-
-## References
-
-- [Red Hat Service Interconnect Documentation](https://docs.redhat.com/en/documentation/red_hat_service_interconnect/)
-- [Red Hat Service Interconnect Downloads](https://access.redhat.com/downloads/) - Official CLI downloads
-- [Red Hat Service Interconnect Product Page](https://developers.redhat.com/products/service-interconnect/overview)
-- [Skupper Project](https://skupper.io/) - Upstream open source project
-- [Skupper Router GitHub](https://github.com/skupperproject/skupper-router)
-
-## License
-
-MIT
