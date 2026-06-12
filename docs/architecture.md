@@ -169,10 +169,16 @@ Important: The Raspberry Pi initiates the connection TO OpenShift, not the other
 
 ```bash
 # On OpenShift - Create a token for the external site to use
-$ oc get secret skupper-link-token -n rhsi-v2-demo -o yaml
+$ skupper token issue ~/rhsi-token.yaml -n rhsi-v2-demo
+Token written to /home/user/rhsi-token.yaml
 
+# Transfer the token file to the Raspberry Pi, then redeem it
 # On Raspberry Pi - Use that token to connect TO OpenShift
-$ skupper link create skupper-link-token.yaml
-Site configured to link to rhsi-v2-demo (name=link1)
-Check the status of the link using 'skupper link status link1'
+$ skupper token redeem ~/rhsi-token.yaml --platform podman
+Site configured to link to rhsi-v2-demo
+
+# Verify the link status
+$ skupper link status --platform podman
+Links created from this site:
+   Link link1 is connected
 ```
