@@ -154,7 +154,7 @@ NAME       ROUTING KEY   PORT   TYPE
 postgres   postgres      5432   tcp
 
 # On Raspberry Pi - Connector with routing-key=postgres
-$ skupper connector status postgres
+$ skupper connector status postgres --platform podman
 Name: postgres
 Routing Key: postgres
 Connected: true
