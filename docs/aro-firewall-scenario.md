@@ -127,10 +127,23 @@ oc get svc postgres -n database-connectivity
 
 ### 3. On the External Host (Database Server or Jump Host)
 
-**Install Skupper CLI:**
+**Install Red Hat Service Interconnect CLI:**
+
+Download from Red Hat Customer Portal:
+1. https://access.redhat.com/downloads/
+2. Search for "Red Hat Service Interconnect"
+3. Download appropriate version for your architecture:
+   - x86-64: `skupper-cli-linux-on-x86_64-2.1.4.tar.gz`
+   - ARM64: `skupper-cli-linux-on-aarch64-2.1.4.tar.gz`
+
 ```bash
-curl -fsSL https://skupper.io/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
+# Extract and install
+tar -xzf skupper-cli-linux-on-*.tar.gz
+sudo cp skupper-cli-linux-on-*/skupper /usr/local/bin/
+sudo chmod +x /usr/local/bin/skupper
+
+# Verify
+skupper version
 ```
 
 **Install Podman (if not already installed):**

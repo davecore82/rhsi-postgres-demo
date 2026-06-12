@@ -134,14 +134,28 @@ echo "host    demodb          demouser        127.0.0.1/32            scram-sha-
 sudo systemctl restart postgresql
 ```
 
-### 3. Install Skupper CLI on Raspberry Pi
+### 3. Install Red Hat Service Interconnect CLI on Raspberry Pi
+
+**Download from Red Hat Customer Portal:**
+
+1. Go to https://access.redhat.com/downloads/
+2. Search for "Red Hat Service Interconnect"
+3. Download **Skupper CLI for Linux on ARM64** (v2.1.4 or later)
+4. Transfer the file to your Raspberry Pi
+
+**Install:**
 
 ```bash
-curl -fsSL https://skupper.io/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
+# Extract the archive
+tar -xzf skupper-cli-linux-on-aarch64-2.1.4.tar.gz
+
+# Install to /usr/local/bin
+sudo cp skupper-cli-linux-on-aarch64-2.1.4.GA/skupper /usr/local/bin/
+sudo chmod +x /usr/local/bin/skupper
 
 # Verify installation
 skupper version
+# Expected: cli 2.1.4
 ```
 
 ### 4. Initialize RHSI Sites
@@ -306,11 +320,18 @@ For persistence across reboots, enable lingering:
 loginctl enable-linger $USER
 ```
 
+## CLI Installation Note
+
+This demo uses the **official Red Hat Service Interconnect CLI** (v2.1.4), downloaded from the Red Hat Customer Portal. This is the supported, productized version for Red Hat Service Interconnect.
+
+**Not Recommended:** The upstream skupper.io installer (`curl -fsSL https://skupper.io/install.sh | sh`) installs the community version which, while compatible, is not officially supported by Red Hat for RHSI deployments.
+
 ## References
 
 - [Red Hat Service Interconnect Documentation](https://docs.redhat.com/en/documentation/red_hat_service_interconnect/)
+- [Red Hat Service Interconnect Downloads](https://access.redhat.com/downloads/) - Official CLI downloads
 - [Red Hat Service Interconnect Product Page](https://developers.redhat.com/products/service-interconnect/overview)
-- [Skupper Project](https://skupper.io/)
+- [Skupper Project](https://skupper.io/) - Upstream open source project
 - [Skupper Router GitHub](https://github.com/skupperproject/skupper-router)
 
 ## License
