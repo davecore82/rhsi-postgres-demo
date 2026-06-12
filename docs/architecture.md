@@ -179,6 +179,11 @@ Site configured to link to rhsi-v2-demo
 
 # On Raspberry Pi - Verify the link status
 $ skupper link status --platform podman
-Links created from this site:
-   Link link1 is connected
+NAME							STATUS	COST	MESSAGE
+ocp-v2-site-0be2d2f0-b318-4897-9f10-54eac7eb55be	Pending	0	Not Operational
+
+# Note: Status may show "Pending" but the link is functional if services work
+# Alternative verification - check router connections on OpenShift side
+$ oc exec -n rhsi-v2-demo deployment/skupper-router -c router -- skstat -c
+# Look for "inter-router" connections from the Pi site with TLS authentication
 ```
