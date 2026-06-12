@@ -36,9 +36,7 @@ skupper-router-inter-router   skupper-router-inter-router-rhsi-v2-demo.apps.prim
 ### Raspberry Pi (External Linux Host)
 
 - **Skupper CLI** - v2.1.4 (Red Hat Service Interconnect)
-- **skupper-router container** - Connects TO OpenShift and forwards traffic
-- **skupper-controller-podman container** - Manages the podman site lifecycle
-- **default-skupper-router container** - Additional router instance
+- **default-skupper-router container** - Router that connects TO OpenShift and forwards traffic
 - **PostgreSQL 15** - Native system process (not containerized)
   - Listening on 127.0.0.1:5432
   - Database: demodb
@@ -55,12 +53,10 @@ controller		2.1.4
 network-observer	2.1.4
 cli			2.1.4
 
-# View running Skupper containers
+# View running Skupper container
 $ podman ps
-CONTAINER ID  IMAGE                                    COMMAND               CREATED       STATUS
-ac73a810e970  quay.io/skupper/skupper-router:2.7.5     /home/skrouterd/b...  20 hours ago  Up 17 minutes
-de73ecf682b4  quay.io/skupper/controller-podman:1.9.1  /app/controller-p...  20 hours ago  Up 17 minutes
-9f1880cfe376  quay.io/skupper/skupper-router:3.5.1     /home/skrouterd/b...  20 hours ago  Up 17 minutes
+CONTAINER ID  IMAGE                                 COMMAND               CREATED       STATUS
+9f1880cfe376  quay.io/skupper/skupper-router:3.5.1  /home/skrouterd/b...  20 hours ago  Up 21 minutes
 
 # Verify PostgreSQL is running as a native process
 $ ps aux | grep postgres | head -1
