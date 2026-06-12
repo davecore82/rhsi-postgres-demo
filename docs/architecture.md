@@ -79,7 +79,7 @@
 │                      │                                       │
 │                      ▼                                       │
 │  ┌────────────────────────────────────────────────────┐     │
-│  │ PostgreSQL 15 (Native Process)                     │     │
+│  │ PostgreSQL 15 (Podman Container)                   │     │
 │  │                                                    │     │
 │  │ Listening: 127.0.0.1:5432                          │     │
 │  │ Database: demodb                                   │     │
@@ -144,10 +144,10 @@
 - **Routes**: Inter-router and edge routes for external connectivity
 
 ### External Linux Host
-- **Skupper CLI**: v2.2+ compatible with RHSI v2
+- **Skupper CLI**: v2.1.4 (Red Hat Service Interconnect)
 - **Site**: RHSI site in podman mode
-- **Containers**: skupper-router, skupper-controller-podman
-- **PostgreSQL**: Native process listening on 127.0.0.1:5432
+- **Containers**: skupper-router, skupper-controller-podman, postgres
+- **PostgreSQL**: Podman container listening on 127.0.0.1:5432
 - **Connector**: postgres (routing-key=postgres, host=127.0.0.1:5432)
 - **Link**: TLS connection TO OpenShift cluster
 
@@ -194,14 +194,15 @@ This is similar to pub/sub messaging - the routing-key is the topic name.
 
 ## Verified Working
 
-✓ PostgreSQL running natively on external host (not containerized)  
-✓ Skupper v2 routers connected via AMQP  
+✓ PostgreSQL running in Podman container on external host  
+✓ Skupper v2.1.4 routers connected via AMQP  
 ✓ Routing-key matching (connector ↔ listener)  
 ✓ TCP adaptation working (v2.x fixed v1.9.x bugs)  
 ✓ Application can query database through service name  
 ✓ No egress IP configured  
 ✓ No firewall rules required  
-✓ Connection initiated from external host TO cluster (inbound)
+✓ Connection initiated from external host TO cluster (inbound)  
+✓ Survives reboot - all services restart automatically
 
 ## Test Results
 
