@@ -121,13 +121,13 @@ spec:
    - Unwraps TCP and forwards to 127.0.0.1:5432
 
 ```bash
-# View the connector configuration on Raspberry Pi
-$ skupper connector inspect postgres
-name: postgres
-routingKey: postgres
-port: 5432
-host: 127.0.0.1
-type: tcp
+# View the connector status on Raspberry Pi
+$ skupper connector status postgres --platform podman
+Name:		postgres
+Status:		Pending
+Routing key:	postgres
+Host:		127.0.0.1
+Port:		5432
 ```
 
 6. **PostgreSQL processes request**
