@@ -177,7 +177,7 @@ Token written to /home/user/rhsi-token.yaml
 $ skupper token redeem ~/rhsi-token.yaml --platform podman
 Site configured to link to rhsi-v2-demo
 
-# Verify the link status
+# On Raspberry Pi - Verify the link status
 $ skupper link status --platform podman
 Links created from this site:
    Link link1 is connected
